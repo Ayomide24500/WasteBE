@@ -16,6 +16,9 @@ const userModel = new Schema<iUserData>(
     status: {
       type: String,
     },
+    address: {
+      type: String,
+    },
     verify: {
       type: Boolean,
       default: false,
