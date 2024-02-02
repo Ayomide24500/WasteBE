@@ -4,158 +4,103 @@ import { HTTP } from "../utils/enums";
 import { sendEmail } from "../utils/email";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
-export const createUser = async(req:Request, res:Response):Promise<Response> =>{
+export const createUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
-    const {email, password } = req.params;
+    const { email, password } = req.params;
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const token = crypto.randomBytes(3).toString("hex");
-    
+
     const user = await userModel.create({
       email,
-      password:hashedPassword,
+      password: hashedPassword,
       status: "user",
-      token
+      token,
     });
-sendEmail(user);
+    sendEmail(user);
     return res.status(HTTP.CREATED).json({
       message: "user created successfully",
-      data: user
+      data: user,
     });
-
   } catch (error) {
     return res.status(HTTP.BAD).json({
-      message: 'error creating user',
-      status: HTTP.BAD
+      message: "error creating user",
+      status: HTTP.BAD,
     });
   }
 };
 
-export const updateUserLocation = async(req:Request, res:Response):Promise<Response> =>{
+export const updateUserLocation = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
-    const {userID} = req.params;
-    
+    const { userID } = req.params;
 
     const user = await userModel.findById(userID);
 
     if (user) {
-      const location = await userModel.findByIdAndUpdate(userID,{
-        address: "",
-      },
-      {new: true}
+      const location = await userModel.findByIdAndUpdate(
+        userID,
+        {
+          address: "",
+        },
+        { new: true }
       );
       return res.status(HTTP.CREATED).json({
-      message: 'user created successfully',
-      data: location,
-      status: HTTP.CREATED
-    });
+        message: "user created successfully",
+        data: location,
+        status: HTTP.CREATED,
+      });
     } else {
       return res.status(HTTP.BAD).json({
-      message: 'error getting user ',
-      status: HTTP.BAD
-    });
+        message: "error getting user ",
+        status: HTTP.BAD,
+      });
     }
-
-    
   } catch (error) {
     return res.status(HTTP.BAD).json({
-      message: 'error creating user',
-      status: HTTP.BAD
+      message: "error creating user",
+      status: HTTP.BAD,
     });
   }
 };
 
-export const verifyUser = async(req:Request, res:Response):Promise<Response> =>{
+export const verifyAll = async (req: Request, res: Response) => {
   try {
-    const {token} = req.body;
-    
-
-    const user = await userModel.findOne(token);
-
-    if (user) {
-      const getUser = await userModel.findByIdAndUpdate(user._id,{
-        token: "",
-        verify: true
-      },
-      {new: true}
+    const { token } = req.body;
+    const getFollwers = await userModel.findOne({ token });
+    if (getFollwers) {
+      await userModel.findByIdAndUpdate(
+        getFollwers._id,
+        {
+          token: "",
+          verify: true,
+        },
+        { new: true }
       );
-      return res.status(HTTP.CREATED).json({
-      message: 'user verified successfully',
-      data: getUser,
-      status: HTTP.CREATED
-    });
+
+      return res.status(HTTP.OK).json({
+        message: "you have been verified 👍👍",
+      });
     } else {
       return res.status(HTTP.BAD).json({
-      message: 'user not found',
-      status: HTTP.BAD
-    });
+        message: "you are not found",
+      });
     }
-
-    
   } catch (error) {
     return res.status(HTTP.BAD).json({
-      message: 'error verifing user',
-      status: HTTP.BAD
+      message: "Error verifying",
     });
   }
 };
-
-export const getOneUser = async(req:Request, res:Response):Promise<Response> =>{
-  try {
-    const {userID} = req.body;
-    
-    const user = await userModel.findById(userID);
-
- return res.status(HTTP.OK).json({
-      message: 'getting user successfully',
-      data: user,
-      status: HTTP.OK
-    });
-    
-  } catch (error) {
-    return res.status(HTTP.BAD).json({
-      message: 'error verifing user',
-      status: HTTP.BAD
-    });
-  }
-};
-
-export const getAllUser = async(req:Request, res:Response):Promise<Response> =>{
-  try {
-    
-    const user = await userModel.find();
-    
-    return res.status(HTTP.OK).json({
-      message: 'error verifing user',
-      data: user,
-      status: HTTP.OK
-    });
-  } catch (error) {
-    return res.status(HTTP.BAD).json({
-      message: 'error verifing user',
-      status: HTTP.BAD
-    });
-  }
-};
-
-export const logOut = async (req: any, res: Response) => {
-  try {
-    req.session.destroy();
-
-    return res.status(HTTP.OK).json({
-      message: "User has been logged out",
-    });
-  } catch (error) {
-    return res.status(HTTP.BAD).json({
-      message: "Error creating user: ",
-    });
-  }
-};
-
 export const signinAll = async (req: any, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -197,7 +142,63 @@ export const signinAll = async (req: any, res: Response) => {
     }
   } catch (error: any) {
     return res.status(HTTP.BAD).json({
-      message: "Error creating : ",
+      message: "Error Sign_in : User",
+    });
+  }
+};
+
+export const getOneUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { userID } = req.body;
+
+    const user = await userModel.findById(userID);
+
+    return res.status(HTTP.OK).json({
+      message: "getting user successfully",
+      data: user,
+      status: HTTP.OK,
+    });
+  } catch (error) {
+    return res.status(HTTP.BAD).json({
+      message: "error verifing user",
+      status: HTTP.BAD,
+    });
+  }
+};
+
+export const getAllUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const user = await userModel.find();
+
+    return res.status(HTTP.OK).json({
+      message: "error verifing user",
+      data: user,
+      status: HTTP.OK,
+    });
+  } catch (error) {
+    return res.status(HTTP.BAD).json({
+      message: "error verifing user",
+      status: HTTP.BAD,
+    });
+  }
+};
+
+export const logOut = async (req: any, res: Response) => {
+  try {
+    req.session.destroy();
+
+    return res.status(HTTP.OK).json({
+      message: "User has been logged out",
+    });
+  } catch (error) {
+    return res.status(HTTP.BAD).json({
+      message: "Error creating user: ",
     });
   }
 };

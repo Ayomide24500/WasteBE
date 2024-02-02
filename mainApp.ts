@@ -4,10 +4,11 @@ import { HTTP } from "./utils/enums";
 import { handleError } from "./error/handleError";
 import passport from "passport";
 import Google from "passport-google-oauth20";
-
+import auth from "./router/userRouter";
 const GoogleStrategy = Google.Strategy;
 export const mainApp = (app: Application) => {
   try {
+    app.use("/", auth);
     app.get("/", (req: Request, res: Response) => {
       try {
         res.status(200).json({
