@@ -1,15 +1,12 @@
 import express, { Application, NextFunction, Request, Response } from "express";
-import auth from "./router/userRouter";
 import { mainError } from "./error/mainError";
 import { HTTP } from "./utils/enums";
 import { handleError } from "./error/handleError";
 import passport from "passport";
 import Google from "passport-google-oauth20";
-import userModel from "./model/userModel";
 
 const GoogleStrategy = Google.Strategy;
 export const mainApp = (app: Application) => {
-  app.use("/api/user", auth);
   try {
     app.get("/", (req: Request, res: Response) => {
       try {
@@ -23,29 +20,28 @@ export const mainApp = (app: Application) => {
       }
     });
 
-    passport.use(
-      new GoogleStrategy(
-        {
-          clientID:
-            "338600539682-itev760d42s40r3h9uk69o4n7ks51ch3.apps.googleusercontent.com",
-          clientSecret: "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",
-          callbackURL: "/auth/google/callback",
-        },
-        async function (accessToken, refreshToken, profile: any, cb) {
-          console.log(profile);
+    // passport.use(
+    //   new GoogleStrategy(
+    //     {
+    //       clientID:
+    //         "338600539682-itev760d42s40r3h9uk69o4n7ks51ch3.apps.googleusercontent.com",
+    //       clientSecret: "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",
+    //       callbackURL: "/auth/google/callback",
+    //     },
+    //     async function (accessToken, refreshToken, profile: any, cb) {
+    //       console.log(profile);
 
-          const user = await userModel.create({
-            email: profile?.email[0]?.value,
-            password: "",
-            verify: profile?.email[0]?.verified,
-            token: "",
-            status: "admin",
-            AdminCode: Math.floor(Math.random() * 112233).toString(),
-          });
-          return cb(null, user);
-        }
-      )
-    );
+    //       const user = await userModel.create({
+    //         email: profile?.email[0]?.value,
+    //         password: "",
+    //         verify: profile?.email[0]?.verified,
+    //         token: "",
+    //         status: "users",
+    //       });
+    //       return cb(null, user);
+    //     }
+    //   )
+    // );
 
     app.get(
       "/auth/google",
