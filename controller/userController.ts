@@ -6,13 +6,16 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-export const createUser = async (
-  req: Request,
-  res: Response
-): Promise<Response> => {
+export const createUser = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.params;
-
+    const { email, password } = req.body;
+    const existingUser = await userModel.findOne({ password });
+    if (existingUser) {
+      return res.status(HTTP.BAD).json({
+        message: "Password already exists",
+        createdAt: existingUser.get("createdAt"),
+      });
+    }
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -21,18 +24,17 @@ export const createUser = async (
     const user = await userModel.create({
       email,
       password: hashedPassword,
-      status: "user",
       token,
+      status: "user",
     });
     sendEmail(user);
     return res.status(HTTP.CREATED).json({
-      message: "user created successfully",
+      message: "client created successfully",
       data: user,
     });
   } catch (error) {
     return res.status(HTTP.BAD).json({
-      message: "error creating user",
-      status: HTTP.BAD,
+      message: "Error creating user",
     });
   }
 };
