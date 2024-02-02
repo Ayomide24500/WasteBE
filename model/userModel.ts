@@ -13,10 +13,6 @@ const userModel = new Schema<iUserData>(
     token: {
       type: String,
     },
-    AdminCode: {
-      type: String,
-      unique: true,
-    },
     status: {
       type: String,
     },

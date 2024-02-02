@@ -11,7 +11,6 @@ export interface iUser {
   email: string;
   password: string;
   token: string;
-  AdminCode: string;
   status: string;
   verify: boolean;
   allpassword: any[];
