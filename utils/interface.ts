@@ -11,6 +11,7 @@ export interface iUser {
   email: string;
   password: string;
   token: string;
+  address: string;
   status: string;
   verify: boolean;
   allpassword: any[];
