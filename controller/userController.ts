@@ -1,47 +1,77 @@
-
 import { Request, Response } from "express";
 import userModel from "../model/userModel";
-import crypto from "crypto";
 import { HTTP } from "../utils/enums";
+import { sendEmail } from "../utils/email";
+import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { sendEmail, sendResetPasswordEmail } from "../utils/email";
 
-
-
-export const updateUserLocation = async(req:Request, res:Response):Promise<Response> => {
+export const createUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
-    const {userID} = req.params;
-    
+    const { email, password } = req.params;
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const token = crypto.randomBytes(3).toString("hex");
+
+    const user = await userModel.create({
+      email,
+      password: hashedPassword,
+      status: "user",
+      token,
+    });
+    sendEmail(user);
+    return res.status(HTTP.CREATED).json({
+      message: "user created successfully",
+      data: user,
+    });
+  } catch (error) {
+    return res.status(HTTP.BAD).json({
+      message: "error creating user",
+      status: HTTP.BAD,
+    });
+  }
+};
+
+export const updateUserLocation = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { userID } = req.params;
 
     const user = await userModel.findById(userID);
 
     if (user) {
-      const location = await userModel.findByIdAndUpdate(userID,{
-        address: "",
-      },
-      {new: true}
+      const location = await userModel.findByIdAndUpdate(
+        userID,
+        {
+          address: "",
+        },
+        { new: true }
       );
       return res.status(HTTP.CREATED).json({
-      message: 'user created successfully',
-      data: location,
-      status: HTTP.CREATED
-    });
+        message: "user created successfully",
+        data: location,
+        status: HTTP.CREATED,
+      });
     } else {
       return res.status(HTTP.BAD).json({
-      message: 'error getting user ',
-      status: HTTP.BAD
-    });
+        message: "error getting user ",
+        status: HTTP.BAD,
+      });
     }
-
-    
   } catch (error) {
     return res.status(HTTP.BAD).json({
-      message: 'error creating user',
-      status: HTTP.BAD
+      message: "error creating user",
+      status: HTTP.BAD,
     });
   }
-}
+};
 
 export const verifyAll = async (req: Request, res: Response) => {
   try {
@@ -117,36 +147,58 @@ export const signinAll = async (req: any, res: Response) => {
   }
 };
 
-export const resetPassWord = async (req: any, res: Response) => {
+export const getOneUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
-    const { email } = req.body;
-    const get = await userModel.findOne({ email });
-    if (get) {
-      const token = crypto.randomBytes(16).toString("hex");
+    const { userID } = req.body;
 
-      const check = await userModel.findByIdAndUpdate(
-        get._id,
-        {
-          token,
-        },
-        { new: true }
-      );
+    const user = await userModel.findById(userID);
 
-      sendResetPasswordEmail(check);
-
-      return res.status(HTTP.OK).json({
-        message: "An email has been sent to confirm your request",
-      });
-    } else {
-      return res.status(HTTP.BAD).json({
-        message: "Not found",
-      });
-    }
+    return res.status(HTTP.OK).json({
+      message: "getting user successfully",
+      data: user,
+      status: HTTP.OK,
+    });
   } catch (error) {
     return res.status(HTTP.BAD).json({
-      message: "Error signing In..",
+      message: "error verifing user",
+      status: HTTP.BAD,
     });
   }
-}
+};
 
+export const getAllUser = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const user = await userModel.find();
 
+    return res.status(HTTP.OK).json({
+      message: "error verifing user",
+      data: user,
+      status: HTTP.OK,
+    });
+  } catch (error) {
+    return res.status(HTTP.BAD).json({
+      message: "error verifing user",
+      status: HTTP.BAD,
+    });
+  }
+};
+
+export const logOut = async (req: any, res: Response) => {
+  try {
+    req.session.destroy();
+
+    return res.status(HTTP.OK).json({
+      message: "User has been logged out",
+    });
+  } catch (error) {
+    return res.status(HTTP.BAD).json({
+      message: "Error creating user: ",
+    });
+  }
+};
