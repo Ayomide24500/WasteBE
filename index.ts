@@ -29,9 +29,10 @@ app.use(
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 12,
     },
+
     store: new mongoConnect({
       uri: process.env.DATABASE_URL!,
-      collection: "session",
+      collection: "admins",
     }),
   })
 );
